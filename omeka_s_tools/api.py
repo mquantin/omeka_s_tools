@@ -14,7 +14,7 @@ class OmekaAPIClient(object):
 
     def __init__(self, api_url, key_identity=None, key_credential=None, use_cache=True):
         self.api_url = api_url
-        self.params = {
+        self.credentials = {
             'key_identity': key_identity,
             'key_credential': key_credential
         }
@@ -78,7 +78,8 @@ class OmekaAPIClient(object):
         * `total_results` - number of matching resources
         * `results` - a list of dicts, each containing a JSON-LD formatted representation of a resource
         '''
-        response = self.s.get(f'{self.api_url}/{resource_type}/', params=kwargs)
+        kwargsWithCredentials = kwargs | self.credentials#credential offers to get non-public (hidden) data
+        response = self.s.get(f'{self.api_url}/{resource_type}/', params=kwargsWithCredentials)
         data = self.process_response(response)
         return {'total_results': int(response.headers['Omeka-S-Total-Results']), 'results': data}
 
@@ -93,7 +94,6 @@ class OmekaAPIClient(object):
         Returns
         * a dict containing a JSON-LD formatted representation of the resource
         '''
-
         data = self.get_resources(resource_type, **kwargs)
         try:
             resource = data['results'][0]
@@ -113,7 +113,7 @@ class OmekaAPIClient(object):
         Returns
         * a dict containing a JSON-LD formatted representation of the resource
         '''
-        response = self.s.get(f'{self.api_url}/{resource_type}/{resource_id}')
+        response = self.s.get(f'{self.api_url}/{resource_type}/{resource_id}/', params=self.credentials)
         data = self.process_response(response)
         return data
 
@@ -376,9 +376,9 @@ class OmekaAPIClient(object):
             payload['o:item_set'] = self.format_resource_id(item_set_id, 'item_sets')
         if media_files:
             files = self.add_media_to_payload(payload, media_files)
-            response = self.s.post(f'{self.api_url}/items', files=files, params=self.params)
+            response = self.s.post(f'{self.api_url}/items', files=files, params=self.credentials)
         else:
-            response = self.s.post(f'{self.api_url}/items', json=payload, params=self.params)
+            response = self.s.post(f'{self.api_url}/items', json=payload, params=self.credentials)
         #print(response.text)
         data = self.process_response(response)
         return data
@@ -498,7 +498,7 @@ class OmekaAPIClient(object):
         Returns:
         * dict with JSON-LD representation of the deleted resource
         '''
-        response = self.s.delete(f'{self.api_url}/{resource_type}/{resource_id}', params=self.params)
+        response = self.s.delete(f'{self.api_url}/{resource_type}/{resource_id}', params=self.credentials)
         data = self.process_response(response)
         return data
 
@@ -513,7 +513,7 @@ class OmekaAPIClient(object):
         To avoid problems, it's generally easiest to retrieve the resource first,
         make your desired changes to it, then submit the updated resource as your payload.
         '''
-        response = self.s.put(f'{self.api_url}/{resource_type}/{payload["o:id"]}', json=payload, params=self.params)
+        response = self.s.put(f'{self.api_url}/{resource_type}/{payload["o:id"]}', json=payload, params=self.credentials)
         data = self.process_response(response)
         return data
 
@@ -558,7 +558,7 @@ class OmekaAPIClient(object):
         payload.update(file_data)
         files[f'file[0]'] = path.read_bytes()
         files['data'] = (None, json.dumps(payload), 'application/json')
-        response = self.s.post(f'{self.api_url}/media', files=files, params=self.params)
+        response = self.s.post(f'{self.api_url}/media', files=files, params=self.credentials)
         data = self.process_response(response)
         return data
 
@@ -694,7 +694,7 @@ class OmekaAPIClient(object):
         * dict containing a JSON-LD representation of the uploaded template
         '''
         # Upload the template payload
-        response = self.s.post(f'{self.api_url}/resource_templates/', params=self.params, json=template_payload)
+        response = self.s.post(f'{self.api_url}/resource_templates/', params=self.credentials, json=template_payload)
         data = self.process_response(response)
         return data
 
@@ -737,6 +737,6 @@ class OmekaAPIClient(object):
         }
         if media_id:
             marker_payload['o:media'] = {'o:id': media_id}
-        response = self.s.post(f'{self.api_url}/mapping_markers/', json=marker_payload, params=self.params)
+        response = self.s.post(f'{self.api_url}/mapping_markers/', json=marker_payload, params=self.credentials)
         data = self.process_response(response)
         return data
