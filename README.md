@@ -78,3 +78,4 @@ See [the documentation](https://wragge.github.io/omeka_s_tools/api.html) for mor
 
 ----
 Created by [Tim Sherratt](https://timsherratt.org) ([@wragge](https://twitter.com/wragge)) for the [GLAM Workbench](https://glam-workbench.net/).
+Updated by [MatthieuQuantin](https://www.ec-nantes.fr/version-francaise/annuaire/matthieu-quantin) for École Centrale de Nantes
