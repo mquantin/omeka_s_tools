@@ -425,6 +425,9 @@ class OmekaAPIClient(object):
         template_properties = self.get_template_properties(template_id)
         payload = {}
         for term, values in terms.items():
+            if term.split(':', 1)[0] == 'o' or term in ['@context', '@id', '@type', 'thumbnail_display_urls']:
+                #its an internal omeka term
+                continue
             if term in template_properties:
                 property_details = template_properties[term]
                 payload[term] = []
